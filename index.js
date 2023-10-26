@@ -8,6 +8,11 @@ const apiKey = process.env.API_KEY;
 
 const bot = new TelegramApi(token, { polling: true });
 
+const sequelize = require("./db");
+const Quotes = require("./quotes_model");
+
+let bodyData = [];
+
 const categories = [
     "age",
     "alone",
@@ -81,12 +86,17 @@ const categories = [
 const options = {
     reply_markup: JSON.stringify({
         resize_keyboard: true,
-        keyboard: [[{ text: "Get quote", callback_data: "get_quote" }]],
+        keyboard: [
+            [
+                { text: "Get quote", callback_data: "get_quote" },
+                { text: "My favorite quotes", callback_data: "get_favs" },
+            ],
+        ],
     }),
     parse_mode: "Markdown",
 };
 
-const getQuote = (chatId) => {
+const getQuote = (chatId, message_id) => {
     request.get(
         {
             url:
@@ -105,12 +115,27 @@ const getQuote = (chatId) => {
                     body.toString("utf8")
                 );
             else {
-                body = JSON.parse(body);
+                body = JSON.parse(body)[0];
+
+                bodyData.push({ message_id: message_id, body });
 
                 return await bot.sendMessage(
                     chatId,
-                    `Quote: \n\n "*${body[0].quote}*" \n\nAuthor: _${body[0].author}_`,
-                    options
+                    `Quote: \n\n "*${body.quote}*" \n\nAuthor: _${body.author}_`,
+                    {
+                        reply_markup: JSON.stringify({
+                            resize_keyboard: true,
+                            inline_keyboard: [
+                                [
+                                    {
+                                        text: "Save to favorites",
+                                        callback_data: `save_to_fav:${message_id}`,
+                                    },
+                                ],
+                            ],
+                        }),
+                        parse_mode: "Markdown",
+                    }
                 );
             }
         }
@@ -147,11 +172,55 @@ const start = () => {
 
     bot.on("message", async (msg) => {
         const data = msg.text;
+        const message_id = msg.message_id;
         const chatId = msg.chat.id;
+        const userId = msg.from.id;
         if (data === "Get quote") {
-            getQuote(chatId);
+            getQuote(chatId, message_id);
+        }
+        if (data === "My favorite quotes") {
+            const quotes = await Quotes.findAll();
+            let allQuotes = "📖 _My favorite quotes:_ 📖\n\n";
+            quotes.map((quote) => {
+                allQuotes += `🖊 Quote: \n\n*${quote.dataValues.quote}* \n© Author: _${quote.dataValues.author}_\n\n`;
+            });
+
+            bot.sendMessage(chatId, allQuotes, { parse_mode: "Markdown" });
+        }
+    });
+
+    bot.on("callback_query", async (msg) => {
+        const data = msg.data.split(":")[0];
+        const message_id = +msg.data.split(":")[1];
+        const userId = msg.from.id;
+        console.log(msg);
+        const chatId = msg.message.chat.id;
+
+        if (data === "save_to_fav" && bodyData) {
+            bodyData.forEach(async (a) => {
+                if (a.message_id === message_id) {
+                    const [quote, created] = await Quotes.findOrCreate({
+                        where: { messageId: message_id },
+                        defaults: {
+                            quote: a.body.quote,
+                            author: a.body.author,
+                            category: a.body.category,
+                            userId: userId,
+                            messageId: message_id,
+                        },
+                    });
+                    return await bot.sendMessage(
+                        chatId,
+                        "Quote successfully saved to favorites!!!"
+                    );
+                }
+            });
         }
     });
 };
+
+(async () => {
+    await sequelize.sync();
+})();
 
 start();
