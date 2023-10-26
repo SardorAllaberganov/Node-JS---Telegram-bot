@@ -1,39 +1,125 @@
+const request = require("request");
 const TelegramApi = require("node-telegram-bot-api");
 require("dotenv").config();
+
 const token = process.env.TOKEN;
+const apiKey = process.env.API_KEY;
 
 const bot = new TelegramApi(token, { polling: true });
 
-const chats = [];
+const categories = [
+    "age",
+    "alone",
+    "amazing",
+    "anger",
+    "architecture",
+    "art",
+    "attitude",
+    "beauty",
+    "best",
+    "birthday",
+    "business",
+    "car",
+    "change",
+    "communications",
+    "computers",
+    "cool",
+    "courage",
+    "dad",
+    "dating",
+    "death",
+    "design",
+    "dreams",
+    "education",
+    "environmental",
+    "equality",
+    "experience",
+    "failure",
+    "faith",
+    "family",
+    "famous",
+    "fear",
+    "fitness",
+    "food",
+    "forgiveness",
+    "freedom",
+    "friendship",
+    "funny",
+    "future",
+    "god",
+    "good",
+    "government",
+    "graduation",
+    "great",
+    "happiness",
+    "health",
+    "history",
+    "home",
+    "hope",
+    "humor",
+    "imagination",
+    "inspirational",
+    "intelligence",
+    "jealousy",
+    "knowledge",
+    "leadership",
+    "learning",
+    "legal",
+    "life",
+    "love",
+    "marriage",
+    "medical",
+    "men",
+    "mom",
+    "money",
+    "morning",
+    "movies",
+    "success",
+];
 
-const gameOpt = {
+const options = {
     reply_markup: JSON.stringify({
-        inline_keyboard: [
-            [
-                { text: 1, callback_data: "1" },
-                { text: 2, callback_data: "2" },
-                { text: 3, callback_data: "3" },
-            ],
-            [
-                { text: 4, callback_data: "4" },
-                { text: 5, callback_data: "5" },
-                { text: 6, callback_data: "6" },
-            ],
-            [
-                { text: 7, callback_data: "7" },
-                { text: 8, callback_data: "8" },
-                { text: 9, callback_data: "9" },
-            ],
-            [{ text: 0, callback_data: "0" }],
-        ],
+        resize_keyboard: true,
+        keyboard: [[{ text: "Get quote", callback_data: "get_quote" }]],
     }),
+    parse_mode: "Markdown",
+};
+
+const getQuote = (chatId) => {
+    request.get(
+        {
+            url:
+                "https://api.api-ninjas.com/v1/quotes?category=" +
+                categories[Math.floor(Math.random() * categories.length)],
+            headers: {
+                "X-Api-Key": apiKey,
+            },
+        },
+        async (error, response, body) => {
+            if (error) return console.error("Request failed:", error);
+            else if (response.statusCode != 200)
+                return console.error(
+                    "Error:",
+                    response.statusCode,
+                    body.toString("utf8")
+                );
+            else {
+                body = JSON.parse(body);
+
+                return await bot.sendMessage(
+                    chatId,
+                    `Quote: \n\n "*${body[0].quote}*" \n\nAuthor: _${body[0].author}_`,
+                    options
+                );
+            }
+        }
+    );
 };
 
 const start = () => {
     bot.setMyCommands([
         { command: "/start", description: "Start the bot" },
         { command: "/info", description: "Gives info about bot" },
-        { command: "/game", description: "Guess the number game" },
     ]);
 
     bot.on("message", async (msg) => {
@@ -41,43 +127,28 @@ const start = () => {
         const chatId = msg.chat.id;
 
         if (text === "/start") {
-            await bot.sendSticker(
+            bot.deleteMessage(chatId, msg.message_id);
+            return await bot.sendMessage(
                 chatId,
-                "https://tlgrm.ru/_/stickers/8a1/9aa/8a19aab4-98c0-37cb-a3d4-491cb94d7e12/3.webp"
+                "Welcome to Daily Quotes Bot🥳 \n\nGet your quote:",
+                options
             );
-            return bot.sendMessage(chatId, `Welcome to Daily Quotes Bot`);
         }
         if (text === "/info") {
             return bot.sendMessage(
                 chatId,
-                `Thoughtful Reflection: Contemplate the wisdom of the world's greatest thinkers.`
-            );
-        }
-        if (text === "/game") {
-            bot.sendMessage(
-                chatId,
-                `Now I will guess a number from 0 to 9, and you must guess it!`
-            );
-            const randomNumber = Math.floor(Math.random() * 10);
-            chats[chatId] = randomNumber;
-            return bot.sendMessage(chatId, "Guess the number!", gameOpt);
-        }
-        return bot.sendMessage(chatId, "I do not understand you, try again!");
-    });
-
-    bot.on("callback_query", async (msg) => {
-        const data = msg.data;
-        const chatId = msg.message.chat.id;
-        if (data == chats[chatId]) {
-            return await bot.sendMessage(
-                chatId,
-                `Congratulation, you guess the number ${chats[chatId]}`
+                "🌟Welcome to QuoteCanvas, your daily source of inspiration and wisdom!🌟 \n\nQuoteCanvas is your personal oasis of daily quotes that inspire, motivate, and uplift. Our mission is to brighten your day, one thought-provoking quote at a time. \n\n📜 Daily Wisdom: Start your day with a fresh perspective. Receive a handpicked, thoughtfully curated quote every day. Whether you're seeking motivation, a moment of reflection, or just a daily dose of inspiration, we've got you covered. \n\n💡 Quotes for Every Occasion: Explore a wide range of quotes, from famous authors to timeless classics. Find the perfect quote to fit any situation, mood, or challenge you're facing. \n\n🌐 Share the Inspiration: Spread the wisdom by easily sharing your favorite quotes with friends and family. Touch their hearts and brighten their day. \n\nIf you have questions Contact Us @info"
             );
         } else {
-            return await bot.sendMessage(
-                chatId,
-                `Unfortunately, you do not guess the number. Bot guess the number ${chats[chatId]}. Try again!`
-            );
+            bot.deleteMessage(chatId, msg.message_id);
+        }
+    });
+
+    bot.on("message", async (msg) => {
+        const data = msg.text;
+        const chatId = msg.chat.id;
+        if (data === "Get quote") {
+            getQuote(chatId);
         }
     });
 };
