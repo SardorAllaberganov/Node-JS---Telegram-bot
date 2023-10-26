@@ -1,0 +1,19 @@
+{
+  "name": "node-js-telegram-bot",
+  "version": "1.0.0",
+  "description": "for learning purposes to creating telegram bot using node js",
+  "main": "index.js",
+  "scripts": {
+    "dev": "nodemon index.js",
+    "start": "node index.js"
+  },
+  "author": "Sardor Allaberganov",
+  "license": "ISC",
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "dependencies": {
+    "dotenv": "^16.3.1",
+    "node-telegram-bot-api": "^0.63.0"
+  }
+}
