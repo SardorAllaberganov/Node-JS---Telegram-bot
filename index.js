@@ -179,11 +179,17 @@ const start = () => {
             getQuote(chatId, message_id);
         }
         if (data === "My favorite quotes") {
-            const quotes = await Quotes.findAll();
-            let allQuotes = "📖 _My favorite quotes:_ 📖\n\n";
-            quotes.map((quote) => {
-                allQuotes += `🖊 Quote: \n\n*${quote.dataValues.quote}* \n© Author: _${quote.dataValues.author}_\n\n`;
+            const quotes = await Quotes.findAll({
+                where: { userId: userId.toString() },
             });
+            let allQuotes = "📖 _My favorite quotes:_ 📖\n\n";
+            if (quotes.length !== 0) {
+                quotes.map((quote) => {
+                    allQuotes += `🖊 Quote: \n\n*${quote.dataValues.quote}* \n© Author: _${quote.dataValues.author}_\n\n`;
+                });
+            } else {
+                allQuotes += "You do not have any saved quotes yet 🙃";
+            }
 
             bot.sendMessage(chatId, allQuotes, { parse_mode: "Markdown" });
         }
@@ -193,7 +199,6 @@ const start = () => {
         const data = msg.data.split(":")[0];
         const message_id = +msg.data.split(":")[1];
         const userId = msg.from.id;
-        console.log(msg);
         const chatId = msg.message.chat.id;
 
         if (data === "save_to_fav" && bodyData) {

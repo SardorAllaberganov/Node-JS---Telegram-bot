@@ -11,8 +11,8 @@ const Quotes = sequelize.define("quotes", {
     quote: Sequelize.STRING,
     author: Sequelize.STRING,
     category: Sequelize.STRING,
-    userId: Sequelize.INTEGER,
-    messageId: Sequelize.INTEGER,
+    userId: Sequelize.STRING,
+    messageId: Sequelize.STRING,
 });
 
 module.exports = Quotes;
