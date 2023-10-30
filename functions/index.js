@@ -1,4 +1,3 @@
-const request = require("request");
 const TelegramApi = require("node-telegram-bot-api");
 const cron = require("node-cron");
 
