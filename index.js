@@ -15,7 +15,6 @@ const Quotes = require("./quotes_model");
 
 const categories = require("./categories");
 
-
 // keyboard buttons
 const options = {
     reply_markup: JSON.stringify({
@@ -141,14 +140,16 @@ const start = () => {
                 where: { userId: userId.toString() },
             });
             let allQuotes = "📖 _My favorite quotes:_ 📖\n\n";
-            bot.sendMessage(chatId, allQuotes, {
-                parse_mode: "Markdown",
-            });
+
             if (quotes.length !== 0) {
                 quotes.map((quote) => {
-                    bot.sendMessage(chatId, `🖊${quote.dataValues.quote}\n\n`, {
-                        parse_mode: "Markdown",
-                    });
+                    bot.sendMessage(
+                        chatId,
+                        allQuotes + `🖊${quote.dataValues.quote}\n\n`,
+                        {
+                            parse_mode: "Markdown",
+                        }
+                    );
                 });
             } else {
                 allQuotes += "You do not have any saved quotes yet 🙃";
