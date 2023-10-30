@@ -1,3 +1,0 @@
-[build]
-  functions = "functions"
-  command = "netlify-lambda install && mkdir ./public"
