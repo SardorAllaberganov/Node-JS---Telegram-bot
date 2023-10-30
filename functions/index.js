@@ -16,7 +16,7 @@ const Quotes = require("./quotes_model");
 const categories = require("./categories");
 
 bot.setWebHook(
-    `https://api.telegram.org/bot40284672037:${token}/setWebhook?url=https://tg-quotes-bot.netlify.app/api/functions`,
+    `https://api.telegram.org/bot${token}/setWebhook?url=https://tg-quotes-bot.netlify.app/api/functions`,
     {
         certificate: "/crt.pem", // Path to your crt.pem
     }
