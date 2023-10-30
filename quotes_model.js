@@ -8,9 +8,9 @@ const Quotes = sequelize.define("quotes", {
         allowNull: false,
         primaryKey: true,
     },
-    quote: Sequelize.STRING,
-    author: Sequelize.STRING,
-    category: Sequelize.STRING,
+    quote: Sequelize.TEXT,
+    // author: Sequelize.STRING,
+    // category: Sequelize.STRING,
     userId: Sequelize.STRING,
     messageId: Sequelize.STRING,
 });
