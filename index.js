@@ -11,7 +11,7 @@ const apiKey = process.env.API_KEY;
 const bot = new TelegramApi(token, { polling: true });
 
 const sequelize = require("./db");
-const Quotes = require("./quotes_model");
+const Quotes = require("./quotes_model"); 
 
 const categories = require("./categories");
 
